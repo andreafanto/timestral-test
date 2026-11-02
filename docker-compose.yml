@@ -1,0 +1,15 @@
+services:
+  timestral:
+    build: .
+    container_name: timestral-api
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_ID: mistralai/Timestral-28M
+      HF_HOME: /models
+      DEVICE: cpu
+    volumes:
+      - ./models:/models
+      - ./data:/data
+      - ./output:/output
+    restart: unless-stopped
