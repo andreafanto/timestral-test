@@ -1,6 +1,5 @@
 import os
 import numpy as np
-import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from timestral import TimestralForecaster
@@ -20,7 +19,7 @@ class ForecastRequest(BaseModel):
     prediction_length: int = 24
 
 
-@app.get("/healthz")
+@app.get("/health")
 def health():
     return {"status": "ok", "model": MODEL_ID, "device": DEVICE}
 
