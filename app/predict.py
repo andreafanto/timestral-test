@@ -12,8 +12,8 @@ CSV = os.getenv("CSV", "/data/series.csv")
 def main(horizon):
     df = load_series(CSV)
 
-    if len(df) < 32 or len(df) > 32768:
-        sys.exit("The number of datapoints in CSV should be 32 <= n < 32768")
+    if len(df) < 32:
+        sys.exit("The number of datapoints in CSV should be >= 32")
 
     payload = forecast(
         API,

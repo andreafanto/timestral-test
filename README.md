@@ -19,7 +19,7 @@ Place a CSV file at `data/series.csv` with two columns: `timestamp` and `value`.
 ### 3. Build and run
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build --force-recreate
 ```
 
 ### 4. Verify the model is loaded
