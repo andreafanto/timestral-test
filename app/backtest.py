@@ -2,12 +2,14 @@
 import os
 import sys
 import argparse
+from datetime import datetime
 import numpy as np
 from core import load_series, compute_metrics, save_outputs
 from timestral_client import forecast
 
 API = os.getenv("API", "http://localhost:8000")
 CSV = os.getenv("CSV", "/data/series.csv")
+OUTPUT = os.getenv("OUTPUT", "/output")
 
 
 def main(horizon):
@@ -28,7 +30,10 @@ def main(horizon):
 
     median = np.asarray(payload["median"], dtype=float)
     metrics = compute_metrics(actual, median)
-    save_outputs(payload, history, actual, metrics)
+    run_dir = os.path.join(OUTPUT, "backtest", datetime.now().strftime("%Y-%m-%d_%H-%M"))
+    os.makedirs(run_dir, exist_ok=True)
+    save_outputs(payload, history, actual, metrics, output_dir=run_dir)
+    print(f"Outputs saved to: {run_dir}")
 
 
 if __name__ == "__main__":

@@ -67,6 +67,38 @@ def plot_forecast(df, split, actual, median, q10, q90, metrics, out_path):
     plt.close()
 
 
+def plot_prediction(history_df, future_ts, median, q10, q90, out_path):
+    """Render and save the prediction plot (history + forecast, no actuals)."""
+    plt.figure(figsize=(14, 7))
+    tail = history_df.iloc[-200:]
+
+    plt.plot(
+        tail["timestamp"], tail["value"],
+        label="History", color="#2563eb", linewidth=1.8,
+    )
+    plt.axvline(
+        history_df["timestamp"].iloc[-1],
+        color="gray", linestyle="--", linewidth=1,
+    )
+    plt.plot(
+        future_ts, median,
+        label="Timestral median", color="#dc2626", linewidth=2,
+    )
+    plt.fill_between(
+        future_ts, q10, q90,
+        color="#dc2626", alpha=0.18, label="10-90% interval",
+    )
+
+    plt.title(f"Timestral — {len(median)}-step forecast")
+    plt.xlabel("Time")
+    plt.ylabel("Value")
+    plt.legend()
+    plt.grid(alpha=0.25)
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=160)
+    plt.close()
+
+
 def save_forecast_csv(actual, median, q10, q90, path):
     """Save forecast vs actual comparison as CSV."""
     pd.DataFrame({
@@ -105,6 +137,8 @@ def save_predictions(history_df, payload, output_dir="/output"):
         "q10": q10,
         "q90": q90,
     }).to_csv(f"{output_dir}/forecast.csv", index=False)
+
+    plot_prediction(history_df, future_ts, median, q10, q90, f"{output_dir}/prediction.png")
 
 
 def _infer_freq(timestamps):

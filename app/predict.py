@@ -2,11 +2,13 @@
 import os
 import sys
 import argparse
+from datetime import datetime
 from core import load_series, save_predictions
 from timestral_client import forecast
 
 API = os.getenv("API", "http://localhost:8000")
 CSV = os.getenv("CSV", "/data/series.csv")
+OUTPUT = os.getenv("OUTPUT", "/output")
 
 
 def main(horizon):
@@ -21,7 +23,10 @@ def main(horizon):
         horizon,
     )
 
-    save_predictions(df, payload)
+    run_dir = os.path.join(OUTPUT, "prediction", datetime.now().strftime("%Y-%m-%d_%H-%M"))
+    os.makedirs(run_dir, exist_ok=True)
+    save_predictions(df, payload, output_dir=run_dir)
+    print(f"Outputs saved to: {run_dir}")
 
 
 if __name__ == "__main__":
