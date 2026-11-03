@@ -27,10 +27,10 @@ def health():
 @app.post("/forecast")
 def forecast(req: ForecastRequest):
     if len(req.values) < 32:
-        raise HTTPException(400, "Fornisci almeno 32 osservazioni storiche.")
+        raise HTTPException(400, "Provide at least 32 historical observations.")
 
     if req.prediction_length < 1 or req.prediction_length > 1024:
-        raise HTTPException(400, "prediction_length deve essere tra 1 e 1024.")
+        raise HTTPException(400, "prediction_length must be between 1 and 1024.")
 
     # Timestral si aspetta: (serie, variabili, tempo)
     context = np.asarray(req.values, dtype=np.float32)[None, None, :]

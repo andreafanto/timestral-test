@@ -8,10 +8,13 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 def load_series(csv_path):
     """Load and validate the CSV time series."""
-    df = pd.read_csv(csv_path, parse_dates=["timestamp"])
-    df = df.sort_values("timestamp").reset_index(drop=True)
-    if "value" not in df.columns:
+    df = pd.read_csv(csv_path)
+    if "timestamp" not in df.columns or "value" not in df.columns:
         sys.exit("CSV must contain 'timestamp' and 'value' columns.")
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df = df.sort_values("timestamp").reset_index(drop=True)
+    # Drop DST fall-back duplicates so each hour is passed to the model once.
+    df = df.drop_duplicates(subset="timestamp", keep="first")
     return df
 
 
@@ -20,7 +23,7 @@ def compute_metrics(actual, median):
     y = actual["value"].to_numpy(dtype=float)
     mae = mean_absolute_error(y, median)
     rmse = float(np.sqrt(mean_squared_error(y, median)))
-    mape = float(np.mean(np.abs((y - median) / np.where(y == 0, np.nan, y))) * 100)
+    mape = float(np.nanmean(np.abs((y - median) / np.where(y == 0, np.nan, y))) * 100)
     return {
         "mae": mae,
         "rmse": rmse,
@@ -77,8 +80,6 @@ def save_forecast_csv(actual, median, q10, q90, path):
 
 def save_predictions(history_df, payload, output_dir="/output"):
     """Save prediction outputs: metrics JSON and forecast CSV (no actuals comparison)."""
-    import pandas as pd
-
     median = np.asarray(payload["median"], dtype=float)
     q10 = np.asarray(payload["q10"], dtype=float)
     q90 = np.asarray(payload["q90"], dtype=float)
@@ -107,9 +108,17 @@ def save_predictions(history_df, payload, output_dir="/output"):
 
 
 def _infer_freq(timestamps):
-    """Infer the frequency of a pandas DatetimeIndex."""
-    inferred = pd.infer_freq(timestamps)
-    return inferred if inferred else "D"
+    """Infer the sampling step of a timestamp series as a pandas frequency.
+
+    Uses the median positive difference between consecutive timestamps so it
+    still works for hourly data with DST gaps or duplicated timestamps,
+    where pd.infer_freq returns None.
+    """
+    diffs = timestamps.diff().dropna()
+    positive = diffs[diffs > pd.Timedelta(0)]
+    if positive.empty:
+        return pd.Timedelta(days=1)
+    return positive.median()
 
 
 def save_outputs(payload, history, actual, metrics, output_dir="/output"):
