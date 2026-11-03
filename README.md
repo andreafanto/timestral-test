@@ -90,6 +90,12 @@ Wait until the log prints `Model loaded.`, then check from another terminal:
 curl http://localhost:8000/health
 ```
 
+**Used Docker before?** The container runs as root, so folders it created are not writable by your user. Run this once before the predict/backtest steps:
+
+```bash
+docker compose exec timestral chown -R $(id -u):$(id -g) /output
+```
+
 ### 5. Predict future values
 
 With the API running and the virtualenv activated:
